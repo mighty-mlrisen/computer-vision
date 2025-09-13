@@ -24,19 +24,3 @@ cv2.imshow('frame', frame)
 if cv2.waitKey(1) & 0xFF == 27:
     0
 """
-
-cap = cv2.VideoCapture("practice.mov", cv2.CAP_ANY)
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        print("Видео закончилось")
-        break
-
-    cv2.imshow("Оригинальное видео", frame)
-
-    if cv2.waitKey(25) & 0xFF == 27:
-        break
-
-cap.release()
-cv2.destroyAllWindows()
