@@ -1,14 +1,14 @@
 import cv2 as cv
 import numpy as np
 
-lower1 = np.array([0, 120, 70])
+lower1 = np.array([0, 140, 60])
 upper1 = np.array([10, 255, 255])
-lower2 = np.array([170, 120, 70])
-upper2 = np.array([179, 255, 255])
+lower2 = np.array([170, 140, 60])
+upper2 = np.array([180, 255, 255])
 
 kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (5,5))
 
-cap = cv.VideoCapture(0, cv.CAP_AVFOUNDATION)  
+cap = cv.VideoCapture(1, cv.CAP_AVFOUNDATION)  
 
 while True:
     ok, img = cap.read()
@@ -24,26 +24,25 @@ while True:
     bw_filter = cv.dilate(cv.erode(mask, kernel, iterations=1), kernel, iterations=1)
     bw_filter = cv.erode(cv.dilate(bw_filter, kernel, iterations=1), kernel, iterations=1)
 
-    contours, _ = cv.findContours(bw_filter, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-
     final_img = img.copy()
+    y_coords, x_coords = np.where(bw_filter > 0)
 
-    if contours:  
+    if len(x_coords) > 0 and len(y_coords) > 0:  
         
-        max_contour = max(contours, key=cv.contourArea)
-        area = cv.contourArea(max_contour)
+        M = cv.moments(bw_filter)
+        area = M['m00']
 
         if area > 500:
-            x, y, w, h = cv.boundingRect(max_contour)
-            M = cv.moments(max_contour)
+            cx = int(M['m10'] / area)
+            cy = int(M['m01'] / area)
 
-            if M['m00'] != 0:
-                cx = int(M['m10'] / M['m00'])
-                cy = int(M['m01'] / M['m00'])
+            x_min, x_max = np.min(x_coords), np.max(x_coords)
+            y_min, y_max = np.min(y_coords), np.max(y_coords)
+
                 
-                cv.circle(final_img, (cx, cy), 6, (0, 255, 0), -1)
+            cv.circle(final_img, (cx, cy), 6, (0, 255, 0), -1)
 
-            cv.rectangle(final_img, (x, y), (x + w, y + h), (0, 0, 0), 2)
+            cv.rectangle(final_img, (x_min, y_min), (x_max, y_max), (0, 0, 0), 2)
 
             cv.putText(final_img, f"Area: {int(area)}", (10,30), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
             cv.putText(final_img, f"Centroid: ({cx},{cy})", (10,60), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
